@@ -1,0 +1,126 @@
+.editable-treegrid  td.editable-td{
+    position: relative;
+}
+
+.editable-treegrid span.td-edit-btn{
+    position: absolute;
+    /*background-color: #fff;*/
+    width: 24px;
+    height: 100%;
+    right: 0;
+    bottom: 0;
+    display: none;
+    padding-top: 8px;
+    padding-left: 4px;
+    cursor: pointer;
+}
+.editable-treegrid span.td-edit-btn:hover{
+    color: #ddd;
+}
+/* input 提交按钮 */
+.editable-treegrid span.edit-td-submit{
+    position: absolute;
+    color: #666;
+    width: 24px;
+    height: 100%;
+    right: 0;
+    bottom: 0;
+    padding-top: 8px;
+    padding-left: 4px;
+}
+.editable-treegrid span.edit-td-submit:hover{
+    color: #000;
+}
+/* input编辑按钮 和 转圈图标*/
+@keyframes rotating {
+    0%{transform: rotate(0deg);}
+    50%{transform: rotate(180deg);}
+    100%{transform: rotate(360deg);}
+}
+.editable-treegrid td.editable-td:hover .td-edit-btn{
+    display: inline-block;
+}
+.editable-treegrid td.editable-td div.edit-box span.fa-circle-o-notch:before{
+    display: inline-block;
+    color:#666;
+    animation: rotating 4s;
+}
+.editable-treegrid input.edit-td-input{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    border: none;
+    border-radius: 0;
+    left: 0;
+}
+/* select编辑按钮 */
+.editable-treegrid td.select-td>div>button{
+    border-radius: 0!important;
+    border:none!important;
+    height: 100% !important;
+    color: #5C5C5C;
+}
+.editable-treegrid td.select-td>div.td-v{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+.editable-treegrid td.select-td{
+    padding: 0!important;
+    width: 110px;
+}
+/* radio */
+.editable-treegrid td.radio-td>input{
+    padding: 0 5px;
+}
+
+/* operate */
+.editable-treegrid th.operate-th , .editable-treegrid td.operate-td{
+    width: 100px;
+    text-align: center;
+}
+td.operate-td button{
+    margin-right: 2px;
+}
+
+
+.editable-treegrid>thead>tr>td,.editable-treegrid>thead>tr>th{
+    border-right: 1px solid #444;
+    background-color: #111;
+}
+.editable-treegrid>thead>tr>td:nth-last-of-type(1),.editable-treegrid>thead>tr>th:nth-last-of-type(1){
+    border-right-color: transparent;
+}
+.editable-treegrid .node-level-2>td{
+    border-right: 1px solid #444;
+    /*cursor: pointer;*/
+}
+.editable-treegrid .node-level-2>td:nth-last-of-type(1){
+    border-right-color: transparent;
+}
+.editable-treegrid td.editable-td:hover{
+    background-color: #111;
+}
+.editable-treegrid th.hide-col,.editable-treegrid td.hide-td,.editable-treegrid td.hide-col{
+    display: none;
+}
+#level-group-table div.bootstrap-select,.editable-treegrid div.bootstrap-select{
+    /*width: 110px !important;*/
+}
+
+/* 只有一层的树 */
+.editable-treegrid.table-without-tree .treegrid-expander{
+    display: none;
+}
+.editable-treegrid.table-without-tree .node-level-1>td:nth-last-of-type(1){
+    border-right-color: transparent;
+}
+.editable-treegrid.table-without-tree .node-level-1>td{
+    border-right: 1px solid #444;
+}
+
+/*覆盖bootstrap-select下拉选择框的220px宽度*/
+div.bootstrap-select:not([class*="span"]):not([class*="col-"]):not([class*="form-control"]).td-v{
+    width: 100%;
+}
