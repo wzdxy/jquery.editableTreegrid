@@ -17,23 +17,32 @@ EditableTreegrid.prototype = {
     /**
      * 从数据填充整个表格
      * @param data
+     * @param async
      */
-    loadData:function (data) {
-        let $tbody=this.ele.find('tbody').empty();
+    loadData:function (data,async) {
+        let This=this;
+        this.ele.find('tbody').remove();
+        let $tbody=$("<tbody></tbody>");
         let groupCount=data.length;                 //level数量
         let childCount=0;                           //行数量
+        let Timer=[];
         for(let i=0,m=data.length;i<m;i++){
-            let $row=this.createRow(data[i],1,i+1,0);
-            $tbody.append($row);
+                let $row=this.createRow(data[i],1,i+1,0);
+                $tbody.append($row);
+                Timer.push({i:new Date().getTime()});
             if(!data[i].Children)continue;
             for(let j=0,n=data[i].Children.length;j<n;j++){
                 let item=data[i].Children[j];
-                let $row=this.createRow(item,2,childCount+groupCount+1,i+1);
+                let $row=This.createRow(item,2,childCount+groupCount+1,i+1);
                 $tbody.append($row);
                 childCount++;
             }
         }
-        this.refresh();
+        Timer.push({'body-before':new Date().getTime()});
+        this.ele.append($tbody);
+        Timer.push({'body-after':new Date().getTime()});
+            This.refresh();
+        console.table(Timer);
         return this;
     },
     /**
@@ -83,7 +92,7 @@ EditableTreegrid.prototype = {
                 if(['readonly','select','input','index','timestamp'].indexOf(tdType)==-1)continue;
                 let tdName=level[i].name;
                 let $td=$(groupRow).find('td:eq('+i+')');
-                group[tdName]=this.getTdValue(tdType,$td);
+                group[tdName]=this.getTdValue(tdType,$td,level[i]);
                 if($(groupRow).find('input[type=radio]').length!=0){
                     group['Selected']=$(groupRow).find('input[type=radio]:checked').length;
                 }
@@ -94,10 +103,10 @@ EditableTreegrid.prototype = {
                 let level=this.levels[1];
                 for(let i=0,m=level.length;i<m;i++){
                     let tdType=level[i].type;
-                    if(['readonly','select','input','index'].indexOf(tdType)==-1)continue;
+                    if(['readonly','select','input','index','timestamp'].indexOf(tdType)==-1)continue;
                     let tdName=level[i].name;
                     let $td=$(nodeRow).find('td:eq('+i+')');
-                    node[tdName]=this.getTdValue(tdType,$td);
+                    node[tdName]=this.getTdValue(tdType,$td,level[i]);
                 }
                 group.Children.push(node);
             }.bind(this));
@@ -110,9 +119,10 @@ EditableTreegrid.prototype = {
      * 获取一个单元格的数据
      * @param type
      * @param ele
+     * @param td
      * @return {string}
      */
-    getTdValue:function (type,ele) {
+    getTdValue:function (type,ele,td) {
         let value='';
         switch (type){
             case 'select':{
@@ -129,13 +139,16 @@ EditableTreegrid.prototype = {
                 break;
             }
         }
-        if(ele.data('map')!=undefined){
+        if(typeof ele.data('map')=='object'){
             let map=ele.data('map');
             for(k in map){
                 if(map[k]==value){
                     value=k;break;
                 }
             }
+        }
+        if(typeof td.map=='function'){
+            value = td['map'](value,true);            //输出时给true
         }
         if(ele.data('datatype')!=undefined){
             value=this.parseType(value,ele.data('datatype'));
@@ -182,6 +195,11 @@ EditableTreegrid.prototype = {
 
         return this;
     },
+    /**
+     * 刷新联动下拉菜单
+     * @param $select
+     * @param tds_i
+     */
     freshLinkSelect:function ($select,tds_i) {
         let parentSelectedVal=$select.selectpicker('val');
         for(let j=0,n=tds_i.options.length;j<n;j++){
@@ -192,6 +210,10 @@ EditableTreegrid.prototype = {
             }
         }
     },
+    /**
+     * 刷新索引
+     * @returns {boolean}
+     */
     refreshIndex:function () {
         if(this.ele.length==0)return false;
         let $rootsIndexTd=this.ele.treegrid('getRootNodes').find('td.index-td');
@@ -214,7 +236,8 @@ EditableTreegrid.prototype = {
                 }
             }
             if(th.type=='hidden')$th.addClass('hide-col');
-            if(th.type=='operate')$th.html(this.createOperateTd(th.name,th.buttons).html()).addClass('operate-th');
+            if(th.type=='operate')
+                $th.empty().append(this.createOperateTd(th.name,th.buttons).children()).addClass('operate-th');
             $tr.append($th);
         }
         this.thead.html($tr);
@@ -237,23 +260,22 @@ EditableTreegrid.prototype = {
             let $td;
             let name=td.name;
             let value=data[name];
-            if(td.map!=undefined)                   //如果有kv映射，则使用map中的值
+            if(typeof td.map=='object')                   //如果有映射，则使用map中的值
                 value=td.map[data[name]];
+            else if(typeof td.map=='function')
+                value = td['map'](value,false);       //加载时给false
             if(value==undefined)value=td.default||'';       //如果value未定义，使用默认值
             switch(td.type){
                 case 'select':{
                     $td=this.createSelectTd(name,tds[i].options,value);
-                    if(tds[i].link){                        //如果有联动下拉菜单
+                    if(td.link){                        //如果有联动下拉菜单
                         $td.bind('change',function (e) {
-                            This.freshLinkSelect($td.find('select.td-v'),tds[i]);
-                            // let parentSelectedVal=$(this).find('select.td-v').selectpicker('val');
-                            // for(let j=0,n=tds[i].options.length;j<n;j++){
-                            //     if(parentSelectedVal==tds[i].options[j].value){
-                            //         let childOptions=tds[i].options[j].children;
-                            //         let targetTd=$(this).parents('tr').find('td')[tds[i].link.col];
-                            //         This.freshSelectOptions(tds[i].link.level,tds[i].link.col,childOptions,tds[i].link.name,targetTd);
-                            //     }
-                            // }
+                            This.freshLinkSelect($td.find('select.td-v'),td);
+                        });
+                    }
+                    if(td.onchange){
+                        $td.find('select').bind('change',function (e) {
+                            td['onchange']($td,$(this).selectpicker('val'));
                         });
                     }
                     break;
@@ -286,7 +308,10 @@ EditableTreegrid.prototype = {
                 $td.prepend($radio);
             }
             if(td.map!=undefined){          //如果有kv映射
-                $td.attr('data-map',JSON.stringify(td.map));
+                if(typeof td.map =='object')
+                    $td.attr('data-map',JSON.stringify(td.map));
+                else if(typeof td.map=='function')
+                    $td.attr('data-map',td.map.name);
             }
             if(td.action!=undefined){
                 $td.attr({'data-url':td.action.url,'data-method':td.action.method,'data-postparams':JSON.stringify({params:td.action.params})});
@@ -308,6 +333,7 @@ EditableTreegrid.prototype = {
             }
             $td.attr({'data-level':level,'data-col':i,'data-type':td.type});
             $row.append($td);
+            if(value=='' && td.type)$td.find('select').selectpicker('val','');
             idx++;
         }
         return $row;
@@ -322,18 +348,25 @@ EditableTreegrid.prototype = {
     addRow:function (data,level,id,parent) {
         let $row=this.createRow(data,level,id,parent);
         let parentNode = this.ele.find('tr.treegrid-'+parent);
-        let allChild = parentNode.treegrid('getChildNodes');
-        if (allChild.length == 0) {                                         //如果父级为空，直接添加在父级后
-            parentNode.after($row[0]);
-        } else {                                                          //否则添加在本组最后
-            allChild[allChild.length - 1].after($row[0]);
+        let allChild=[];
+        if(parentNode.length) {
+            let allChild = parentNode.treegrid('getChildNodes');
+            if (allChild.length == 0) {                                         //如果父级为空，直接添加在父级后
+                parentNode.after($row[0]);
+            } else {                                                          //否则添加在本组最后
+                allChild[allChild.length - 1].after($row[0]);
+            }
+        }else{
+            parentNode=this.ele.find('tbody');
+            parentNode.append($row[0]);
         }
+
         this.refresh();
     },
     /**
      * 绑定 删除当前行 按钮
      */
-    bindDeleteCurNode(){                                                                    //删除行
+    bindDeleteCurNode:function(){                                                                    //删除行
         let This=this;
         this.ele.find('button.delete-node-btn').unbind('click');                    //先移除所有同名事件
         this.ele.find('button.delete-node-btn').bind('click', function (e) {
@@ -382,7 +415,7 @@ EditableTreegrid.prototype = {
                 this.ele.find('tbody').append(newRoot);
             }
             this.refresh();
-            if(this.callback&&this.callback.addRow)this.callback['addRow']();
+            if(this.callback&&this.callback.addRow)this.callback['addRow'](newRoot);
         }.bind(this));
     },
     createIndexTd:function (name,level) {
@@ -481,9 +514,13 @@ EditableTreegrid.prototype = {
 
     },
     /**
-     * select变化时同步另一个input
+     * select变化时同步另一个input[level,srcName,destName,srcAttr]
      */
-    selectChangeSync:function ([level,srcName,destName,srcAttr]) {
+    selectChangeSync:function (param) {
+        let level=param[0];
+        let srcName=param[1];
+        let destName=param[2];
+        let srcAttr=param[3];
         let $srcSelect=this.ele.find('[data-name='+srcName+'] select');
         let $destSpan=this.ele.find('[data-name='+destName+'] span');
 
@@ -504,7 +541,7 @@ EditableTreegrid.prototype = {
     /**
      * 给input类型添加编辑按钮
      */
-    addEditBtn(){
+    addEditBtn:function(){
         this.ele.find('span.td-edit-btn').remove();               //先清空所有编辑按钮
         let allEditable = this.ele.find('td.editable-td');            //所有可编辑的表格
         let editBtn = document.createElement('span');                         //重新创建编辑按钮
@@ -542,7 +579,15 @@ EditableTreegrid.prototype = {
             }
         }
     },
-    editInputTd(curTd,value){
+    editInputTd:function(curTd,value){
+        let level=$(curTd).data('level')-1;
+        let col=$(curTd).data('col');
+        let td=this.levels[level][col];
+        if(td.validate && value!=''){
+            let result=td.validate['test'](value);
+            if(td.validate['callback'])td.validate['callback'](value,result,curTd);
+            if (!result)return false;
+        }
         if($(curTd).data('url')){
             this.postInputAction(curTd,value);
         }else{
@@ -555,9 +600,10 @@ EditableTreegrid.prototype = {
      * @param value
      * @return {number}
      */
-    changeLocalValue(curTd, value){                                              //保存表格内容
+    changeLocalValue:function(curTd, value){                                              //保存表格内容
         $(curTd).find('div.edit-box').remove();
-        if (value == $(curTd).find('span.td-v').html())return 0;
+        if(!$(curTd).length)return false;
+        if (value == $(curTd).find('span.td-v' && value!='' &&value!=0).html())return 0;
         $(curTd).find('span.td-v').html(value);
         let level=$(curTd).data('level')-1;
         let col=$(curTd).data('col');
@@ -570,7 +616,7 @@ EditableTreegrid.prototype = {
      * @param curTd
      * @param value
      */
-    postInputAction(curTd,value){
+    postInputAction:function(curTd,value){
         if (value == $(curTd).find('span.td-v').html()){
             $(curTd).find('div.edit-box').remove();return 0;
         }
@@ -588,6 +634,24 @@ EditableTreegrid.prototype = {
             this.changeLocalValue(curTd,value);
             $(curTd).find('.edit-box span').removeClass('fa-circle-o-notch').addClass('fa-check');
         }.bind(this)});
+    },
+    /**
+     * 修改一列的数据
+     * @param levelNum
+     * @param colNum
+     * @param data
+     */
+    changeDataOfCol:function (levelNum,colNum,data) {
+        let This=this;
+        let td=this.levels[levelNum][colNum];
+        $tds=this.ele.find('td[data-level="'+(levelNum+1)+'"][data-col="'+colNum+'"]');
+        for(let i=0;i<$tds.length;i++){ //TODO 修改一列的数据
+
+        }
+        // $.each($tds,function () {
+        //
+        //     data.push(this.getTdValue(td.type,$(this),td));
+        // });
     },
     /**
      *  把表格内容整理成对象数组输出
@@ -621,19 +685,26 @@ EditableTreegrid.prototype = {
     },
 
     /**
-     * 获取一个列的数据，返回所有数据组成的数组
-     * @param colNum
+     * 获取一个或多个的数据，返回所有数据组成的数组
+     * @param colNum {Number|Array}
      * @param level
      * @return {Array}
      */
     getDataOfCol:function (colNum,level) {
+        if(typeof colNum=='object'){
+            let Data=[];
+            for(let i=0,m=colNum.length;i<m;i++){
+                Data.push(this.getDataOfCol(colNum[i],level));
+            }
+            return Data;
+        }
         let This=this;
         let data=[];
         let type=this.levels[level][colNum].type;
         let rows=this.ele.treegrid('getAllNodes').each(function () {
             if($(this).hasClass('node-level-'+(level+1))){
                 let td=$(this).find('td')[colNum];
-                data.push(This.getTdValue(type,$(td)));
+                data.push(This.getTdValue(type,$(td),This.levels[level][colNum]));
             }
         });
         return data;
@@ -644,7 +715,9 @@ EditableTreegrid.prototype = {
         let data={};
         $(tr).find('td').each(function () {
             let type=$(this).data('type');
-            data[$(this).data('name')]=This.getTdValue(type,$(this));
+            let level=$(this).data('level')-1;
+            let col=$(this).data('col');
+            data[$(this).data('name')]=This.getTdValue(type,$(this),This.levels[level][col]);
         });
         return data;
     },
