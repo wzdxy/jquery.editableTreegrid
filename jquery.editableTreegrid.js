@@ -645,13 +645,36 @@ EditableTreegrid.prototype = {
         let This=this;
         let td=this.levels[levelNum][colNum];
         $tds=this.ele.find('td[data-level="'+(levelNum+1)+'"][data-col="'+colNum+'"]');
-        for(let i=0;i<$tds.length;i++){ //TODO 修改一列的数据
-
+        for(let i=0;i<$tds.length;i++){
+            let value=data;
+            if(typeof data=='object')value=data[i];
+            This.changeValOfTd($tds[i],value);
         }
-        // $.each($tds,function () {
-        //
-        //     data.push(this.getTdValue(td.type,$(this),td));
-        // });
+    },
+    /**
+     * 修改一个单元格的数据
+     * @param td
+     * @param value
+     */
+    changeValOfTd:function (td,value) {
+        let level=$(td).data('level');
+        let col=$(td).data('col');
+        let type=$(td).data('type');
+        switch (type){
+            case 'readonly':
+            case 'input':{
+                $(td).children('span.td-v').text(value);
+                break;
+            }
+            case 'select':{
+                $(td).children('select.td-v').selectpicker('val',value);
+                break;
+            }
+            default:{
+                return console.info('write a '+type+' td is not allowed');
+            }
+        }
+        return 0;
     },
     /**
      *  把表格内容整理成对象数组输出
@@ -709,7 +732,21 @@ EditableTreegrid.prototype = {
         });
         return data;
     },
-
+    /**
+     * 根据值筛选表格, 返回符合条件的行号
+     * @param level
+     * @param colNum
+     * @param value
+     */
+    filterRowsByValue:function (level,colNum,value) {
+        let data=this.getDataOfCol(colNum,level);
+        let rows=[];
+        // let colName=this.levels[level][colNum].name;
+        for(let i=0,m=data.length;i<m;i++){
+            if(value==data[i])rows.push(i);
+        }
+        return rows;
+    },
     getDataOfRow:function (tr) {
         let This=this;
         let data={};
