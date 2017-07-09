@@ -13,9 +13,10 @@
     padding-top: 8px;
     padding-left: 4px;
     cursor: pointer;
+    color:#999;
 }
 .editable-treegrid span.td-edit-btn:hover{
-    color: #ddd;
+    color: #666;
 }
 /* input 提交按钮 */
 .editable-treegrid span.edit-td-submit{
@@ -86,21 +87,21 @@ td.operate-td button{
 
 
 .editable-treegrid>thead>tr>td,.editable-treegrid>thead>tr>th{
-    border-right: 1px solid #444;
-    background-color: #111;
+    border-right: 1px solid #aaa;
+    /*background-color: #111;*/
 }
 .editable-treegrid>thead>tr>td:nth-last-of-type(1),.editable-treegrid>thead>tr>th:nth-last-of-type(1){
     border-right-color: transparent;
 }
 .editable-treegrid .node-level-2>td{
-    border-right: 1px solid #444;
+    border-right: 1px solid #aaa;
     /*cursor: pointer;*/
 }
 .editable-treegrid .node-level-2>td:nth-last-of-type(1){
     border-right-color: transparent;
 }
 .editable-treegrid td.editable-td:hover{
-    background-color: #111;
+    /*background-color: #111;*/
 }
 .editable-treegrid th.hide-col,.editable-treegrid td.hide-td,.editable-treegrid td.hide-col{
     display: none;
@@ -117,7 +118,7 @@ td.operate-td button{
     border-right-color: transparent;
 }
 .editable-treegrid.table-without-tree .node-level-1>td{
-    border-right: 1px solid #444;
+    border-right: 1px solid #aaa;
 }
 
 /*覆盖bootstrap-select下拉选择框的220px宽度*/
