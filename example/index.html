@@ -4,20 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/bootstrap-select/1.12.2/css/bootstrap-select.css" rel="stylesheet">
+    <link href="../libs/css/jquery.treegrid.css" rel="stylesheet"></link>
+    <link href="../src/css/editable-treegrid.css" rel="stylesheet"></link>
+    <link href="../src/css/toastr.min.css" rel="stylesheet"></link>
+    <link href="https://cdn.bootcss.com/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
     <title>Document</title>
 </head>
 <body>
-    <div class="col-md-12" id="deviceIOTabGPIO" >
-        <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active"><a href="#device-io-gpio-in-tab" role="tab" data-toggle="tab">输入</a></li>
-            <li role="presentation"><a href="#device-io-gpio-out-tab" role="tab" data-toggle="tab">输出</a></li>
-        </ul>
-        <!-- Tab panes -->
-        <div class="tab-content">
-            <div role="tabpanel" class="tab-pane  active" id="device-io-gpio-in-tab"><table id="device-io-gpio-in"></table></div>
-            <div role="tabpanel" class="tab-pane" id="device-io-gpio-out-tab"><table id="device-io-gpio-out"></table></div>
+    <div class="row" style="padding:10px">
+        <div class="col-md-12" id="deviceIOTabGPIO" >
+            <h3>基本可编辑表格</h3>
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#device-io-gpio-in-tab" role="tab" data-toggle="tab">输入</a></li>
+                <li role="presentation"><a href="#device-io-gpio-out-tab" role="tab" data-toggle="tab">输出</a></li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane  active" id="device-io-gpio-in-tab"><table id="device-io-gpio-in"></table></div>
+                <div role="tabpanel" class="tab-pane" id="device-io-gpio-out-tab"><table id="device-io-gpio-out"></table></div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <h3>具有添加删除行事件的表格</h3>
+            <table id="table-on-delete-and-add"></table>
+            <pre class="hljs js">
+            window.table2=new EditableTreegrid("#table-on-delete-and-add",{
+                heads: [
+                    {name: '序号', type: 'input'},
+                    {name: 'ID', type: 'input'},
+                    {name: '添加', type: 'operate', buttons: {addRoot: {name: '添加'}}},],
+                levels: [
+                    [
+                        {name: 'index', type: 'index',dataType:'number'},
+                        {name: 'name', type: 'input'},
+                        {name: 'deleteRow', type: 'operate', buttons: {delete: {name: '删除'}}}
+                    ]
+                ],
+                callback:{
+                    addRow:function(newRow){toastr.success('Add a row')},
+                    deleteRow:function(){toastr.success('Delete a row')}
+                }
+            }).init().loadData([
+                {name:'Tom'},{name:'Ming'},{name:'LiLei'},
+            ]);
+            </pre>
+        </div>
+        <div class="col-md-12">
+            <h3>具有修改数据事件的表格</h3>
+            <table id="table-with-data-changed"></table>
+            <pre class="hljs js">
+            window.table2=new EditableTreegrid("#table-with-data-changed",{
+                heads: [
+                    {name: '序号', type: 'input',style:{backgroundColor:'#4f5'}},
+                    {name: 'ID', type: 'input'},
+                    {name: '添加', type: 'operate', buttons: {addRoot: {name: '添加'}}}]
+                levels: [
+                    [
+                        {name: 'index', type: 'index',dataType:'number'},
+                        {name: 'name', type: 'input',onchange:function(curTd,value,oldValue){toastr.success('<b>'+oldValue+'</b> changed to <b>'+value+'</b>')}},
+                        {name: 'deleteRow', type: 'operate', buttons: {delete: {name: '删除'}}}
+                    ]
+                ],
+            }).init().loadData([
+                {name:'Tom'},{name:'Ming'},{name:'LiLei'},
+            ]);
+            </pre>
+        </div>
+        <div class="col-md-12">
+            <h3>获取数据
+                <button class="btn btn-primary" onclick="alert(JSON.stringify(table3.getData(),null,4))">获取数据</button>
+                <button class="btn btn-primary" onclick="alert(JSON.stringify(table3.getDataOfCol(0,0),null,4))">获取第一列数据</button>
+                <button class="btn btn-primary" onclick="alert(JSON.stringify(table3.getDataOfCol(1,0),null,4))">获取第二列数据</button>
+                <button class="btn btn-primary" onclick="alert(JSON.stringify(table3.getDataOfCol(2,0),null,4))">获取第三列数据</button>
+            </h3>
+            <table id="table-get-data"></table>
+            <pre class="hljs js">
+            window.table2=new EditableTreegrid("#table-get-data",{
+                heads: [
+                    {name: '序号', type: 'input',style:{backgroundColor:'#4f5'}},
+                    {name: 'Name', type: 'input'},
+                    {name: 'age', type: 'input'},
+                    {name: '添加', type: 'operate', buttons: {addRoot: {name: '添加'}}}]
+                levels: [
+                    [
+                        {name: 'index', type: 'index',dataType:'number'},
+                        {name: 'id', type: 'input'},
+                        {name: 'age', type: 'input'},
+                        {name: 'deleteRow', type: 'operate', buttons: {delete: {name: '删除'}}}
+                    ]
+                ],
+            }).init().loadData([
+                {name:'Tom',age:22},{name:'Ming',age:23},{name:'LiLei',age:33},
+            ]);
+            </pre>
         </div>
     </div>
+    
 
 
 
@@ -27,11 +112,17 @@
     <script src="https://cdn.bootcss.com/bootstrap-select/1.12.2/js/bootstrap-select.js"></script>
     <script src="../libs/js/jquery.treegrid.js"></script>
     <script src="../src/js/jquery.editableTreegrid.js"></script>
+    <script src="../src/js/toastr.min.js"></script>
     <script src="js.js"></script>
-    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet">
-    <link href="https://cdn.bootcss.com/bootstrap-select/1.12.2/css/bootstrap-select.css" rel="stylesheet">
-    <link href="../libs/css/jquery.treegrid.css" rel="stylesheet"></link>
-    <link href="../src/css/editable-treegrid.css" rel="stylesheet"></link>
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/languages/javascript.min.js"></script>
+    <script>
+        $(function () {
+            hljs.initHighlightingOnLoad()
+            $('pre.hljs').each(function (i,$pre) {
+                hljs.highlightBlock($pre);
+            })
+        })
+    </script>
 </body>
 </html>

@@ -668,14 +668,15 @@ EditableTreegrid.prototype = {
      * @return {number}
      */
     changeLocalValue:function(curTd, value){                                              //保存表格内容
+        let level=$(curTd).data('level')-1;
+        let col=$(curTd).data('col');
+        let oldValue=this.getTdValue(this.levels[level][col].type,$(curTd),this.levels[level][col]);
         $(curTd).find('div.edit-box').remove();
         if(!$(curTd).length)return false;
         if (value == $(curTd).find('span.td-v' && value!='' &&value!=0).html())return 0;
         $(curTd).find('span.td-v').html(value);
-        let level=$(curTd).data('level')-1;
-        let col=$(curTd).data('col');
         if(this.levels[level][col]['onchange']){
-            this.levels[level][col]['onchange'](curTd,value);
+            this.levels[level][col]['onchange'](curTd,value,oldValue);
         }
     },
     /**
